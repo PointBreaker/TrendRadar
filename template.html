@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>News for DaxZhu</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" integrity="sha512-BNaRQnYJYiPSqHHDb58B0yaPfCu+Wgds8Gp/gU33kqBtgNS4tSPHuGibyoeqMV/TJlSKda6FXzoEyYGjTe+vXA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <style>
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            margin: 0;
+            padding: 16px;
+            background: #f0f2f5;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 16px rgba(0,0,0,0.08);
+        }
+
+        /* 顶部统计栏 */
+        .stats-bar {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1px;
+            background: #e5e7eb;
+            padding: 1px;
+        }
+
+        .stat-item {
+            background: white;
+            padding: 16px;
+            text-align: center;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 4px;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: #1a1a1a;
+        }
+
+        /* 筛选栏 */
+        .filter-bar {
+            padding: 16px 24px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e5e7eb;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .filter-tag {
+            padding: 6px 14px;
+            background: white;
+            border: 1px solid #d1d5db;
+            border-radius: 16px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        .filter-tag:hover {
+            border-color: #4f46e5;
+            color: #4f46e5;
+        }
+
+        .filter-tag.active {
+            background: #4f46e5;
+            border-color: #4f46e5;
+            color: white;
+        }
+
+        .search-box {
+            flex: 1;
+            min-width: 200px;
+            position: relative;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 6px 12px 6px 32px;
+            border: 1px solid #d1d5db;
+            border-radius: 16px;
+            font-size: 13px;
+            outline: none;
+            transition: all 0.2s;
+        }
+
+        .search-input:focus {
+            border-color: #4f46e5;
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #999;
+        }
+
+        /* 头部 */
+        .header {
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            color: white;
+            padding: 32px 24px;
+            position: relative;
+        }
+
+        .save-buttons {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            display: flex;
+            gap: 8px;
+        }
+
+        .save-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .save-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .header-title {
+            font-size: 24px;
+            font-weight: 700;
+            margin: 0 0 8px 0;
+        }
+
+        .header-time {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        /* 内容区 */
+        .content {
+            padding: 24px;
+        }
+
+        /* 热点分组 */
+        .hot-group {
+            margin-bottom: 32px;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .group-header {
+            background: #f8f9fa;
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            user-select: none;
+            transition: background 0.2s;
+        }
+
+        .group-header:hover {
+            background: #f3f4f6;
+        }
+
+        .group-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .group-name {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1a1a1a;
+        }
+
+        .group-count {
+            font-size: 13px;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-weight: 600;
+        }
+
+        .group-count.hot {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+
+        .group-count.warm {
+            background: #fed7aa;
+            color: #ea580c;
+        }
+
+        .group-count.normal {
+            background: #e5e7eb;
+            color: #666;
+        }
+
+        .expand-icon {
+            width: 20px;
+            height: 20px;
+            transition: transform 0.3s;
+            color: #999;
+        }
+
+        .hot-group.expanded .expand-icon {
+            transform: rotate(180deg);
+        }
+
+        /* 新闻列表 */
+        .news-list {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+        }
+
+        .hot-group.expanded .news-list {
+            max-height: 2000px;
+            transition: max-height 0.5s ease-in;
+        }
+
+        .news-item {
+            padding: 16px;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            gap: 12px;
+            position: relative;
+        }
+
+        .news-item:last-child {
+            border-bottom: none;
+        }
+
+        .news-item:hover {
+            background: #fafafa;
+        }
+
+        .news-rank {
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f3f4f6;
+            color: #666;
+            font-size: 13px;
+            font-weight: 600;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .news-rank.top {
+            background: #dc2626;
+            color: white;
+        }
+
+        .news-rank.high {
+            background: #ea580c;
+            color: white;
+        }
+
+        .news-content {
+            flex: 1;
+        }
+
+        .news-meta {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 6px;
+            font-size: 12px;
+            color: #666;
+        }
+
+        .news-source {
+            color: #4f46e5;
+            font-weight: 500;
+        }
+
+        .news-title {
+            font-size: 15px;
+            line-height: 1.4;
+            margin: 0;
+        }
+
+        .news-link {
+            color: inherit;
+            text-decoration: none;
+        }
+
+        .news-link:hover {
+            color: #4f46e5;
+        }
+
+        .new-badge {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: #fbbf24;
+            color: #92400e;
+            font-size: 10px;
+            font-weight: 700;
+            padding: 2px 6px;
+            border-radius: 4px;
+            text-transform: uppercase;
+        }
+
+        /* 新增新闻部分 */
+        .new-section {
+            margin-top: 40px;
+            padding-top: 24px;
+            border-top: 2px solid #f0f0f0;
+        }
+
+        .new-section-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin: 0 0 20px 0;
+            color: #1a1a1a;
+        }
+
+        .new-source-group {
+            margin-bottom: 24px;
+        }
+
+        .new-source-title {
+            font-size: 13px;
+            font-weight: 500;
+            margin: 0 0 12px 0;
+            color: #666;
+            padding-bottom: 6px;
+            border-bottom: 1px solid #f5f5f5;
+        }
+
+        .new-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px 0;
+            border-bottom: 1px solid #f9f9f9;
+        }
+
+        .new-item:last-child {
+            border-bottom: none;
+        }
+
+        .new-item-rank {
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f3f4f6;
+            color: #666;
+            font-size: 11px;
+            font-weight: 600;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .new-item-rank.top {
+            background: #dc2626;
+            color: white;
+        }
+
+        .new-item-rank.high {
+            background: #ea580c;
+            color: white;
+        }
+
+        .new-item-content {
+            flex: 1;
+        }
+
+        .new-item-title {
+            font-size: 14px;
+            line-height: 1.4;
+            margin: 0;
+        }
+
+        /* 错误信息部分 */
+        .error-section {
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 24px;
+        }
+
+        .error-title {
+            color: #dc2626;
+            font-size: 14px;
+            font-weight: 600;
+            margin: 0 0 8px 0;
+        }
+
+        .error-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .error-item {
+            color: #991b1b;
+            font-size: 13px;
+            padding: 2px 0;
+            font-family: 'SF Mono', Consolas, monospace;
+        }
+
+        /* 底部 */
+        .footer {
+            background: #f8f9fa;
+            padding: 20px 24px;
+            text-align: center;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .footer-text {
+            font-size: 13px;
+            color: #666;
+        }
+
+        .footer-link {
+            color: #4f46e5;
+            text-decoration: none;
+        }
+
+        /* 响应式 */
+        @media (max-width: 640px) {
+            .filter-bar {
+                padding: 12px;
+            }
+
+            .stats-bar {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .search-box {
+                width: 100%;
+                order: -1;
+            }
+
+            .content {
+                padding: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 统计栏 -->
+        <div class="stats-bar">
+            <div class="stat-item">
+                <div class="stat-label">总新闻数</div>
+                <div class="stat-value">$total_titles</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-label">热点新闻</div>
+                <div class="stat-value">$hot_news_count</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-label">热点词汇</div>
+                <div class="stat-value">$word_count</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-label">更新时间</div>
+                <div class="stat-value" style="font-size: 18px;">$update_time</div>
+            </div>
+        </div>
+
+        <!-- 筛选栏 -->
+        <div class="filter-bar">
+            <div class="filter-tag active" onclick="filterByCategory('all', this)">全部</div>
+            <div class="filter-tag" onclick="filterByCategory('tech', this)">科技/AI</div>
+            <div class="filter-tag" onclick="filterByCategory('entertainment', this)">娱乐/影视</div>
+            <div class="filter-tag" onclick="filterByCategory('music', this)">音乐/短视频</div>
+            <div class="filter-tag" onclick="filterByCategory('social', this)">社会/民生</div>
+            <div class="search-box">
+                <span class="search-icon">🔍</span>
+                <input type="text" class="search-input" placeholder="搜索热点词或新闻..." oninput="searchContent(this.value)">
+            </div>
+        </div>
+
+        <!-- 头部 -->
+        <div class="header">
+            <div class="save-buttons">
+                <button class="save-btn" onclick="saveAsImage()">保存图片</button>
+                <button class="save-btn" onclick="saveAsMultipleImages()">分段保存</button>
+            </div>
+            <h1 class="header-title">News for DaxZhu</h1>
+            <div class="header-time">$generation_time</div>
+        </div>
+
+        <!-- 内容区 -->
+        <div class="content">
+            $error_section
+
+            <!-- 热点词组 -->
+            $word_groups
+
+            <!-- 新增新闻 -->
+            $new_news_section
+        </div>
+
+        <!-- 底部 -->
+        <div class="footer">
+            <div class="footer-text">
+                <strong>News for DaxZhu</strong>·
+                <a href="https://github.com/sansan0/TrendRadar" target="_blank" class="footer-link">基于 TrendRadar</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 展开/收起分组
+        function toggleGroup(header) {
+            const group = header.parentElement;
+            group.classList.toggle('expanded');
+        }
+
+        // 分类筛选
+        function filterByCategory(category, element) {
+            // 更新选中状态
+            document.querySelectorAll('.filter-tag').forEach(tag => {
+                tag.classList.remove('active');
+            });
+            element.classList.add('active');
+
+            // 显示/隐藏分组
+            document.querySelectorAll('.hot-group').forEach(group => {
+                if (category === 'all') {
+                    group.style.display = 'block';
+                } else {
+                    group.style.display = group.dataset.category === category ? 'block' : 'none';
+                }
+            });
+        }
+
+        // 搜索功能
+        function searchContent(keyword) {
+            keyword = keyword.toLowerCase();
+            document.querySelectorAll('.hot-group').forEach(group => {
+                const groupName = group.querySelector('.group-name').textContent.toLowerCase();
+                const newsTitles = Array.from(group.querySelectorAll('.news-title')).map(
+                    el => el.textContent.toLowerCase()
+                );
+
+                const match = groupName.includes(keyword) ||
+                             newsTitles.some(title => title.includes(keyword));
+
+                group.style.display = match || keyword === '' ? 'block' : 'none';
+
+                // 如果有匹配，展开该分组
+                if (match && keyword !== '') {
+                    group.classList.add('expanded');
+                }
+            });
+        }
+
+        // 保存图片功能（复用原有代码）
+        $save_script
+    </script>
+</body>
+</html>
