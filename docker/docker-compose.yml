@@ -41,6 +41,7 @@ services:
       - NTFY_TOKEN=${NTFY_TOKEN:-}
       # Bark配置
       - BARK_URL=${BARK_URL:-}
+      - BARK_MARKDOWN=${BARK_MARKDOWN:-true}
       # Slack配置
       - SLACK_WEBHOOK_URL=${SLACK_WEBHOOK_URL:-}
       # 运行模式

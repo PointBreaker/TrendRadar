@@ -201,6 +201,11 @@ def load_config():
     config["BARK_URL"] = os.environ.get("BARK_URL", "").strip() or webhooks.get(
         "bark_url", ""
     )
+    config["BARK_MARKDOWN"] = (
+        os.environ.get("BARK_MARKDOWN", "").strip().lower() in ("true", "1")
+        if os.environ.get("BARK_MARKDOWN", "").strip()
+        else webhooks.get("bark_markdown", True)
+    )  # 默认启用markdown
 
     # 输出配置来源信息
     notification_sources = []
@@ -229,7 +234,8 @@ def load_config():
 
     if config["BARK_URL"]:
         bark_source = "环境变量" if os.environ.get("BARK_URL") else "配置文件"
-        notification_sources.append(f"Bark({bark_source})")
+        markdown_status = "启用" if config["BARK_MARKDOWN"] else "禁用"
+        notification_sources.append(f"Bark({bark_source}, markdown:{markdown_status})")
 
     if notification_sources:
         print(f"通知渠道配置来源: {', '.join(notification_sources)}")
@@ -4163,7 +4169,12 @@ def send_to_bark(
     proxy_url: Optional[str] = None,
     mode: str = "daily",
 ) -> bool:
-    """发送到Bark（支持分批发送，使用纯文本格式）"""
+    """发送到Bark（支持分批发送，支持markdown格式）
+
+    根据配置中的 BARK_MARKDOWN 选项决定是否使用markdown格式：
+    - True: 发送markdown格式的消息
+    - False: 发送纯文本消息（兼容旧版本）
+    """
     proxies = None
     if proxy_url:
         proxies = {"http": proxy_url, "https": proxy_url}
@@ -4193,12 +4204,19 @@ def send_to_bark(
             batch_header = f"[第 {actual_batch_num}/{total_batches} 批次]\n\n"
             batch_content = batch_header + batch_content
 
-        # 清理 markdown 语法（Bark 不支持 markdown）
-        plain_content = strip_markdown(batch_content)
+        # 根据配置决定是否使用markdown
+        if CONFIG["BARK_MARKDOWN"]:
+            # 使用markdown格式
+            final_content = batch_content
+            content_format = "markdown"
+        else:
+            # 清理 markdown 语法（兼容旧版本）
+            final_content = strip_markdown(batch_content)
+            content_format = "plain text"
 
-        batch_size = len(plain_content.encode("utf-8"))
+        batch_size = len(final_content.encode("utf-8"))
         print(
-            f"发送Bark第 {actual_batch_num}/{total_batches} 批次（推送顺序: {idx}/{total_batches}），大小：{batch_size} 字节 [{report_type}]"
+            f"发送Bark第 {actual_batch_num}/{total_batches} 批次（推送顺序: {idx}/{total_batches}），大小：{batch_size} 字节，格式：{content_format} [{report_type}]"
         )
 
         # 检查消息大小（Bark使用APNs，限制4KB）
@@ -4210,7 +4228,7 @@ def send_to_bark(
         # 构建JSON payload
         payload = {
             "title": report_type,
-            "body": plain_content,
+            "body": final_content,
             "sound": "default",
             "group": "TrendRadar",
         }
