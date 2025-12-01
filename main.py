@@ -3256,15 +3256,15 @@ def send_to_bark(
         if CONFIG["BARK_MARKDOWN"]:
             # 使用markdown格式
             final_content = batch_content
-            content_format = "markdown"
+            content_type = "markdown"
         else:
             # 清理 markdown 语法（兼容旧版本）
             final_content = strip_markdown(batch_content)
-            content_format = "plain text"
+            content_type = "body"
 
         batch_size = len(final_content.encode("utf-8"))
         print(
-            f"发送Bark第 {actual_batch_num}/{total_batches} 批次（推送顺序: {idx}/{total_batches}），大小：{batch_size} 字节，格式：{content_format} [{report_type}]"
+            f"发送Bark第 {actual_batch_num}/{total_batches} 批次（推送顺序: {idx}/{total_batches}），大小：{batch_size} 字节，格式：{content_type} [{report_type}]"
         )
 
         # 检查消息大小（Bark使用APNs，限制4KB）
@@ -3276,9 +3276,9 @@ def send_to_bark(
         # 构建JSON payload
         payload = {
             "title": report_type,
-            "body": final_content,
             "sound": "default",
             "group": "TrendRadar",
+            content_type: final_content,  # 动态设置字段名：body 或 markdown
         }
 
         try:
