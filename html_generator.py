@@ -122,14 +122,27 @@ def generate_word_group_html(stat: Dict, id_to_name: Optional[Dict]) -> str:
         hot_class = "normal"
         hot_text = f"{count} 条"
 
-    # 确定分类（简化版，可以根据需要调整）
+    # 确定分类（根据新的8个分类）
     category = "tech"  # 默认分类
-    if any(x in word for x in ["音乐", "演唱会", "抖音", "B站", "bilibili"]):
+
+    # AI板块
+    if any(x in word for x in ["AI", "人工智能", "ChatGPT", "GPT", "大模型", "智能驾驶", "AIGC"]):
+        category = "ai"
+    # 音乐板块
+    elif any(x in word for x in ["音乐", "歌手", "演唱会", "专辑", "QQ音乐", "网易云音乐"]):
         category = "music"
-    elif any(x in word for x in ["电影", "原神", "黑神话", "游戏"]):
-        category = "entertainment"
-    elif any(x in word for x in ["胖东来", "996", "调休", "房价"]):
+    # 短视频板块
+    elif any(x in word for x in ["短视频", "抖音", "快手", "视频号", "直播", "带货", "网红"]):
+        category = "video"
+    # 游戏板块
+    elif any(x in word for x in ["游戏", "电竞", "手游", "端游", "原神", "王者荣耀", "英雄联盟"]):
+        category = "game"
+    # 社会板块
+    elif any(x in word for x in ["社会", "民生", "政策", "法规", "教育", "医疗", "就业", "房价"]):
         category = "social"
+    # 金融板块
+    elif any(x in word for x in ["金融", "股票", "基金", "加密货币", "比特币", "交易所", "港股", "A股"]):
+        category = "finance"
 
     # 生成新闻项HTML
     news_items_html = ""
@@ -229,7 +242,6 @@ def generate_new_news_html(new_titles: Union[List, Dict], id_to_name: Optional[D
                     source_items_html += f"""
                         <div class="new-item">
                             <div class="new-item-rank {rank_class}">{idx}</div>
-                            <div class="new-item-rank {rank_class}">{rank}</div>
                             <div class="new-item-content">
                                 <div class="new-item-title">
                                     <a href="{url}" class="news-link" target="_blank">{title}</a>
@@ -267,7 +279,6 @@ def generate_new_news_html(new_titles: Union[List, Dict], id_to_name: Optional[D
                     source_items_html += f"""
                         <div class="new-item">
                             <div class="new-item-rank {rank_class}">{idx}</div>
-                            <div class="new-item-rank {rank_class}">{rank}</div>
                             <div class="new-item-content">
                                 <div class="new-item-title">
                                     <a href="{url}" class="news-link" target="_blank">{title}</a>
